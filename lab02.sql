@@ -192,3 +192,31 @@ J%JUNES
 400
 300
   */
+ -- 15)
+  SELECT e.empno 사원번호,
+         e.ename 이름,
+         e.sal 급여 ,
+         TO_CHAR(DECODE(e.job,
+                'CLERK', 300,
+                'SALESMAN', 450,
+                'MANAGER', 600,
+                'ANALYST', 800,
+                'PRESIDENT', 1000),'$9,999') "자기 계발비"
+   FROM emp e;      
+  /*
+7369	SMITH	800	       $300
+7499	ALLEN	1600	   $450
+7521	WARD	1250	   $450
+7566	JONES	2975	   $600
+7654	MARTIN	1250	   $450
+7698	BLAKE	2850	   $600
+7782	CLARK	2450	   $600
+7839	KING	5000	 $1,000
+7844	TURNER	1500	   $450
+7900	JAMES	950	       $300
+7902	FORD	3000	   $800
+7934	MILLER	1300	   $300
+9999	J	500	   $300
+8888	J_JUNE	400	   $300
+7777	J%JUNES	300	   $300
+  */  
