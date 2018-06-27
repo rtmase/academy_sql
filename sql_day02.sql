@@ -427,7 +427,101 @@
   ORDER BY "급여 구간" DESC;
  
  -- 2) 문자함수
- 
+ -- 1. INITCAP(str) : str 의 첫 글자를 대문자화 (영문인 경우)
+ SELECT INITCAP('the soap') 
+   FROM dual; -- The Soap
+ SELECT INITCAP('안녕하세요') 
+   FROM dual; -- 안녕하세요
+
+ -- 2. LOWER(str) : str 을 소문자화 (영문인 경우)
+ SELECT LOWER('MR. SCOTT MCMILLAN') "소문자로 변경" 
+   FROM dual;
+
+ -- 3. UPPER(str) : str 을 대문자화 (영문인 경우)
+ SELECT UPPER('lee') "성을 대문자로" 
+   FROM dual;
+ SELECT UPPER('sql is coooooooooooool~!!') "씐나!" 
+   FROM dual;
+
+ -- 4. LENGTH(str), LENGTHB(str) : str 의 글자길이를 계산
+ SELECT LENGTH('hello, sql') as "글자 길이" 
+   FROM dual;
+ SELECT 'hello, sql의 글자 길이는 ' || LENGTH('hello, sql') || '입니다' as "글자 길이"
+   FROM dual;
+ -- oracle 에서 한글은 3byte로 계산
+ SELECT LENGTHB('hello, sql') as "글자 byte" 
+   FROM dual;
+ SELECT LENGTHB('오라클凸') as "글자 byte" 
+   FROM dual;
+
+ -- 5. CONCAT(str1, str2) : str1, str2 문자열을 접합, || 연산자와 동일
+ SELECT CONCAT('안녕하세요, ', 'SQL') 
+   FROM dual;
+ SELECT '안녕하세요, ' || 'SQL' 
+   FROM dual;
+
+ -- 6. SUBSTR(str, i, n) : str 에서 i번째 위치에서 n개의 글자를 추출
+ --                        SQL 에서 문자열 인덱스를 나타내는 i는 1부터 시작에 주의함
+ SELECT SUBSTR('sql is coooooooooooooooool', 3, 4) 
+   FROM dual;
+ --      SUBSTR(str, i) : i번째 위치에 문자열 끝까지 추출
+ SELECT SUBSTR('sql is coooooooooooooooool', 3) 
+   FROM dual;
+
+ -- 7. INSTR(str1, str2) : 2번째 문자열이 1번째 문자열 어디에 위치하는가
+ --                        등장하는 위치를 계산
+ SELECT INSTR('sql is coooooooooooooooool', 'is') 
+   FROM dual;
+ SELECT INSTR('sql is coooooooooooooooool', 'ia') 
+   FROM dual;
+ -- 2번째 문장이 등장하지 않으면 0으로 계산
+
+ -- 8. LPAD, RPAD(str, n, c) : 입력된 str 에 대해서, 전체 글자의 자릿수를 n으로 잡고
+ --                            남는 공간에 왼쪽, 혹은 오른쪽으로 c 의 문자를 채워넣는다
+ SELECT LPAD('sql is cool', 20, '!') 
+   FROM dual;
+ SELECT RPAD('sql is cool', 20, '!') 
+   FROM dual;
+
+ -- 9. LTRIM, RTRIM, TRIM : 입력된 문자열의 왼쪽, 오른쪽, 양쪽 공백 제거
+ SELECT '>' || LTRIM('          sql is cool           ') || '<' 
+   FROM dual;
+ SELECT '>' || RTRIM('          sql is cool           ') || '<' 
+   FROM dual;
+ SELECT '>' || TRIM('          sql is cool           ') || '<' 
+   FROM dual;
+
+ -- 10. NVL(expr1, expr2), NVL2(expr1, expr2, expr3), NULLIF(expr1, expr2)
+ -- NVL(expr1, expr2) : 첫번째 식의 값이 NULL이면 두번째 식으로 대체하여 출력
+ -- mgr 가 배정안된 직원의 경우 '매니저 없음' 으로 변경하여 출력
+ SELECT e.EMPNO
+      , e.ENAME
+      , NVL(e.MGR, '매니저 없음')
+   FROM emp e                         --타입 불일치로 실행이 안됨;
+   
+ SELECT e.EMPNO
+      , e.ENAME
+      , NVL('' || e.MGR, '매니저 없음')
+   FROM emp e;
+
+ -- NVL2(expr1, expr2, expr3)
+ --  : 첫번째 식의 값이 NOT NULL 이면 두번째 식의 값으로 대체하여 출력
+ --                  NULL 이면 세번째 식의 값으로 대체하여 출력
+ SELECT e.EMPNO
+      , e.ENAME
+      , NVL2(e.MGR, '매니저있음', '매니저없음')
+   FROM emp e;
+
+ -- NULLIF(expr1, expr2)
+ --  : 첫번째 식, 두번째 식의 값이 동일하면 NULL을 출력
+ --    식의 값이 다르면 첫번째 식의 값을 출력
+ SELECT NULLIF('AAA', 'AAA') 
+   FROM dual;
+ SELECT NULLIF('AAA', 'BBB') 
+   FROM dual;
+ -- 조회된 결과 1행이 NULL 인 결과를 얻게 됨
+ -- 1행이라도 NULL이 조회된 결과는 인출된 모든 행 : 0 과는 상태가 다름
+
  
  
  
@@ -520,12 +614,56 @@ J%JUNES
  SELECT lpad('SQL',7, '$')
    FROM dual;
  -- $$$$SQL
+ -- 9)
  SELECT rpad('SQL',7,'$')
    FROM dual;
  -- SQL$$$$ 
-  
-  
-  
-  
-  
-  
+ -- 10)
+ SELECT ltrim('       SQL배우기    ')
+   FROM dual;
+ -- 11)
+ SELECT rtrim('       SQL배우기    ')
+   FROM dual;
+ -- 12)
+ SELECT trim('       SQL배우기    ')
+   FROM dual;
+ -- 13) 커미션이 NULL 인 경우 0으로 출력
+ SELECT nvl(e.comm,0)
+   FROM emp e;
+  /*
+0
+300
+500
+0
+1400
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+  */
+ -- 14) 커미션이 NULL 이면 0, 아니면 급여 + 커미션 출력  
+ SELECT nvl2(e.comm,0,e.sal + nvl(e.comm,0))
+   FROM emp e;
+  /*
+800
+0
+0
+2975
+0
+2850
+2450
+5000
+0
+950
+3000
+1300
+500
+400
+300
+  */
