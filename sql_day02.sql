@@ -522,7 +522,36 @@
  -- 조회된 결과 1행이 NULL 인 결과를 얻게 됨
  -- 1행이라도 NULL이 조회된 결과는 인출된 모든 행 : 0 과는 상태가 다름
 
+ -- 3) 날짜 함수 : 날짜 출력 패턴 조합으로 다양하게 출력 가능
+ SELECT sysdate
+   FROM dual;
+   
+ -- TO_CHAR() : 숫자나 날짜를 문자형으로 변환
+ SELECT TO_CHAR(sysdate, 'YYYY') FROM dual;
+ SELECT TO_CHAR(sysdate, 'YY') FROM dual;
+ SELECT TO_CHAR(sysdate, 'MM') FROM dual;
+ SELECT TO_CHAR(sysdate, 'MONTH') FROM dual;
+ SELECT TO_CHAR(sysdate, 'DD') FROM dual;
+ SELECT TO_CHAR(sysdate, 'D') FROM dual;
+ SELECT TO_CHAR(sysdate, 'DAY') FROM dual;
+ SELECT TO_CHAR(sysdate, 'DY') FROM dual;
  
+ -- 패턴을 조합
+ SELECT TO_CHAR(sysdate, 'YYYY-MM-DD') FROM dual;
+ SELECT TO_CHAR(sysdate, 'FMYYYY-MM-DD') FROM dual;
+ SELECT TO_CHAR(sysdate, 'YY-MONTH-DD') FROM dual;
+ SELECT TO_CHAR(sysdate, 'YY-MONTH-DD DAY') FROM dual;
+ SELECT TO_CHAR(sysdate, 'YY-MONTH-DD DY') FROM dual;
+ 
+ /* 시간 패턴 :
+    HH : 시간을 두자리로 표기
+    MI : 분을 두자리로 표기
+    SS : 초를 두자리로 표기
+    HH24 : 시간을 24시간 체계로 표기
+    AM : 오전인지 오후인지 표기
+*/
+ SELECT TO_CHAR(sysdate, 'YY-MONTH-DD HH24:MI:SS') FROM dual;
+ SELECT TO_CHAR(sysdate, 'YY-MONTH-DD AM HH:MI:SS') FROM dual;
  
  
  
