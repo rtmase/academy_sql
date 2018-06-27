@@ -553,7 +553,79 @@
  SELECT TO_CHAR(sysdate, 'YY-MONTH-DD HH24:MI:SS') FROM dual;
  SELECT TO_CHAR(sysdate, 'YY-MONTH-DD AM HH:MI:SS') FROM dual;
  
+ -- 날짜 값과 숫자의 연산 : +, - 연산 가능
+ -- 10일 후
+ SELECT sysdate + 10 FROM dual;
+ -- 10일 전
+ SELECT sysdate - 10 FROM dual;
+ -- 10시간 후
+ SELECT sysdate + (10/24) FROM dual;
+ SELECT TO_CHAR(sysdate + (10/24),'YY-MM-DD HH24:MI:SS') FROM dual;
  
+ -- 1. MONTHS_BETWEEN(day1,day2) : 두 날짜 사이의 달의 차이
+ SELECT MONTHS_BETWEEN(SYSDATE,emp.hiredate) 
+   FROM emp;
+   
+ -- 2. ADD_MONTHS(day1, n) : 날짜1에 숫자 만큼 더한 후의 날짜를 구함
+ SELECT ADD_MONTHS(sysdate, 3) FROM dual;
+ 
+ -- 3. NEXT_DAY, LAST_DAY : 다음 요일에 해당하는 날짜를 구함, 이 달의 마지막 날짜
+ SELECT NEXT_DAY(sysdate, '일요일') FROM dual;   -- 요일을 문자로 입력했을 때
+ SELECT NEXT_DAY(sysdate, 1) FROM dual;         -- 요일을 숫자로 입력해도 작동
+ SELECT LAST_DAY(sysdate) FROM dual;
+ 
+ -- 4. ROUND, TRUNC : 날짜 관련 반올림, 버림
+ SELECT ROUND(sysdate) FROM dual;
+ SELECT TO_CHAR(ROUND(sysdate),'YY-MM-DD HH24:MI:SS') FROM dual;
+ SELECT TRUNC(sysdate) FROM dual;
+ SELECT TO_CHAR(TRUNC(sysdate),'YY-MM-DD HH24:MI:SS') FROM dual;
+ 
+ -- 4) 데이터 타입 변환 함수
+ /*
+  TO_CHAR()     : 숫자, 날짜 ==> 문자
+  TO_DATE()     : 날짜 형식의 문자 ==> 날짜
+  TO_NUMBER()   : 숫자로만 구성된 문자데이터 ==> 숫자
+ */
+ -- 1. TO_CHAR() : 숫자패턴
+ -- 숫자패턴 = 9 ==> 한자리 숫자
+ SELECT TO_CHAR(12345,'9999') FROM dual;
+ SELECT TO_CHAR(12345,'99999') FROM dual; 
+ SELECT e.empno,
+        TO_CHAR(e.sal)
+   FROM emp e;
+ --문자 데이터는 <<정렬
+ --숫자 데이터는 >>정렬
+ 
+ -- 숫자를 문자로 표현
+ SELECT TO_CHAR(12345,'999999999') data
+   FROM dual; 
+ -- 앞에 빈칸 0 으로 패딩
+ SELECT TO_CHAR(12345,'099999999') data 
+   FROM dual;  
+ -- 소수점 이하 표현
+ SELECT TO_CHAR(12345,'999999.99') data
+   FROM dual; 
+ -- 숫자패턴에서 3자리씩 끊어 읽기 + 소수점 이하 표현
+ SELECT TO_CHAR(12345,'9,999,999.99') data 
+   FROM dual; 
+ 
+ -- 2. TO_DATE() : 날짜패턴에 맞는 문자 값을 날짜 데이터로 변경
+ SELECT TO_DATE('2018-06-27', 'YYYY-MM-DD') today
+   FROM dual;
+ -- 18/06/27        날짜로 인식 
+ SELECT '2018-06-27' today FROM dual; 
+ -- 2018-06-27      날짜로 인식 하지 않음
+ SELECT TO_DATE('2018-06-27', 'YYYY-MM-DD') + 10 today
+   FROM dual;
+ -- 18/07/07
+ SELECT '2018-06-27' + 10 today FROM dual; 
+ -- ORA-01722: invalid number ==> 문자 + 숫자 의 연산 불가능
+ 
+ -- 3. TO_NUMBER() : 오라클이 자동 형변환을 제공하므로 자주 사용은 안됨
+ SELECT '1000' + 10 result FROM dual;
+ -- 1010            
+ SELECT TO_NUMBER('1000') + 10 result FROM dual;
+ -- 1010
  
  
  
