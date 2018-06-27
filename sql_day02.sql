@@ -626,145 +626,123 @@
  -- 1010            
  SELECT TO_NUMBER('1000') + 10 result FROM dual;
  -- 1010
+   
+ -- 5) DECODE(expr,search,result [,search, result]...[,default])
+ -- 만약 default 가 설정이 안되었고, expr 과 일치하는 search 가 없는 경우 NULL을 return
+ -- 값이 YES 일 때
+ SELECT DECODE('YES',
+        'YES', '입력값이 YES 입니다.',  -- search, result set1
+        'NO', '입력값이 NO 입니다.'     -- search, result set2
+        ) as result  
+   FROM dual;
+ -- 값이 NO 일 때
+ SELECT DECODE('NO',
+        'YES', '입력값이 YES 입니다.',  -- search, result set1
+        'NO', '입력값이 NO 입니다.'     -- search, result set2
+        ) as result  
+   FROM dual;
+ -- 값이 예 일 때
+ SELECT DECODE('예',
+        'YES', '입력값이 YES 입니다.',  -- search, result set1
+        'NO', '입력값이 NO 입니다.'     -- search, result set2
+        ) as result  
+   FROM dual;
+ -- expr 과 일치하는 search 가 없고, default 설정도 안되었을 때, 
+ -- 결과가 인출된 모든 행 : 0 이 아닌 NULL 이라는 것을 확인
+ SELECT DECODE('예',
+        'YES', '입력값이 YES 입니다.',  -- search, result set1
+        'NO', '입력값이 NO 입니다.',     -- search, result set2
+        '입력값이 YES/NO 중 어느 것도 아닙니다') as result  
+   FROM dual;
  
- 
- 
- 
- 
- -- 실습 1)
- SELECT INITCAP(emp.ename)
-   FROM emp;
+ -- emp 테이블의 hiredate 의 입사년도를 추출하여 몇년 근무했는지를 계산
+ -- 장기근속 여부 판단
+ -- 1) 입사년도 추출 : 날짜 패턴
+ SELECT e.empno,
+        e.ename,
+        TO_CHAR(e.hiredate,'YYYY') hireyear
+   FROM emp e; 
+ -- 2) 몇년근무 판단 : 오늘 시스템 날짜와 연산
+ SELECT e.empno,
+        e.ename,
+        TO_CHAR(sysdate,'YYYY') - TO_CHAR(e.hiredate,'YYYY') "근무햇수"
+   FROM emp e;
+ -- 3) 37년 이상 된 직원을 장기 근속으로 판단
+ SELECT a.empno,
+        a.ename,
+        a.warkingyear,
+        DECODE(a.warkingyear,
+               37,'장기 근속자 입니다.',
+               38,'장기 근속자 입니다',
+               '장기근속자가 아닙니다.') as "장기 근속 여부"
+   FROM (SELECT e.empno,
+                e.ename,
+                TO_CHAR(sysdate,'YYYY') - TO_CHAR(e.hiredate,'YYYY') warkingyear
+           FROM emp e) a;
+   
+ -- job별로 경조사비를 일정 비율로 지급하고 있다.
+ -- 각 직원들의 경조사비 지원금을 구하자
+ /*
+    CLERK : 5%
+    SALESMAN : 4%
+    MANAGER : 3.7%
+    ANALYST : 3%
+    PRESIDENT : 1.5%
+ */
+  SELECT e.empno,
+         e.ename,
+         e.job,
+         TO_CHAR(DECODE(e.job,
+                        'CLERK', e.sal * 0.05,
+                        'SALESMAN', e.sal * 0.04,
+                        'MANAGER', e.sal * 0.037,
+                        'ANALYST', e.sal * 0.03,
+                        'PRESIDENT', e.sal * 0.015),'$999.99') " 경조사비 지원금"
+   FROM emp e;
    /*
-Smith
-Allen
-Ward
-Jones
-Martin
-Blake
-Clark
-King
-Turner
-James
-Ford
-Miller
-J
-J_June
-J%Junes
+7369	SMITH	CLERK	      $40.00
+7499	ALLEN	SALESMAN	  $64.00
+7521	WARD	SALESMAN	  $50.00
+7566	JONES	MANAGER	     $110.08
+7654	MARTIN	SALESMAN	  $50.00
+7698	BLAKE	MANAGER	     $105.45
+7782	CLARK	MANAGER	      $90.65
+7839	KING	PRESIDENT	  $75.00
+7844	TURNER	SALESMAN	  $60.00
+7900	JAMES	CLERK	      $47.50
+7902	FORD	ANALYST	      $90.00
+7934	MILLER	CLERK	      $65.00
+9999	J	CLERK	          $25.00
+8888	J_JUNE	CLERK	      $20.00
+7777	J%JUNES	CLERK	      $15.00   
    */
- -- 실습 2)
- SELECT LOWER(emp.ename)
-   FROM emp;
-  /*
-smith
-allen
-ward
-jones
-martin
-blake
-clark
-king
-turner
-james
-ford
-miller
-j
-j_june
-j%junes
-  */
-  -- 3)
-  SELECT UPPER(emp.ename)
-    FROM emp;
-  /*
-SMITH
-ALLEN
-WARD
-JONES
-MARTIN
-BLAKE
-CLARK
-KING
-TURNER
-JAMES
-FORD
-MILLER
-J
-J_JUNE
-J%JUNES
-  */
- -- 4)
- SELECT LENGTH('KOREA')
-   FROM dual;
    
- SELECT LENGTHB('KOREA')
-   FROM dual;
- -- 5)
- SELECT LENGTH('LEEDONGHEE')
-   FROM dual;
    
- SELECT LENGTHB('LEEDONGHEE')
-   FROM dual;
- -- 6)
- SELECT concat('SQL','배우기')
-   FROM dual;
- -- SQL배우기
- -- 7)
- SELECT substr('SQL 배우기',5,2)
-   FROM dual;
- -- 배우
- -- 8)
- SELECT lpad('SQL',7, '$')
-   FROM dual;
- -- $$$$SQL
- -- 9)
- SELECT rpad('SQL',7,'$')
-   FROM dual;
- -- SQL$$$$ 
- -- 10)
- SELECT ltrim('       SQL배우기    ')
-   FROM dual;
- -- 11)
- SELECT rtrim('       SQL배우기    ')
-   FROM dual;
- -- 12)
- SELECT trim('       SQL배우기    ')
-   FROM dual;
- -- 13) 커미션이 NULL 인 경우 0으로 출력
- SELECT nvl(e.comm,0)
-   FROM emp e;
+ -- 15)
+  SELECT e.empno 사원번호,
+         e.ename 이름,
+         e.sal 급여 ,
+         TO_CHAR(DECODE(e.job,
+                'CLERK', 300,
+                'SALESMAN', 450,
+                'MANAGER', 600,
+                'ANALYST', 800,
+                'PRESIDENT', 1000),'$9,999') "자기 계발비"
+   FROM emp e;      
   /*
-0
-300
-500
-0
-1400
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-  */
- -- 14) 커미션이 NULL 이면 0, 아니면 급여 + 커미션 출력  
- SELECT nvl2(e.comm,0,e.sal + nvl(e.comm,0))
-   FROM emp e;
-  /*
-800
-0
-0
-2975
-0
-2850
-2450
-5000
-0
-950
-3000
-1300
-500
-400
-300
+7369	SMITH	800	       $300
+7499	ALLEN	1600	   $450
+7521	WARD	1250	   $450
+7566	JONES	2975	   $600
+7654	MARTIN	1250	   $450
+7698	BLAKE	2850	   $600
+7782	CLARK	2450	   $600
+7839	KING	5000	 $1,000
+7844	TURNER	1500	   $450
+7900	JAMES	950	       $300
+7902	FORD	3000	   $800
+7934	MILLER	1300	   $300
+9999	J	500	   $300
+8888	J_JUNE	400	   $300
+7777	J%JUNES	300	   $300
   */
