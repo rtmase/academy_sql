@@ -273,6 +273,16 @@
                   GROUP BY e.job ); 
  -- WHERE 절에서 비교는 e.sal 은 컬럼1행
  -- 그런데 서브쿼리에서 들어오는 값은 컬럼이 6행, 비교 자체가 불가능
+ SELECT e.empno,
+        e.ename,
+        e.job,
+        e.sal
+   FROM emp e
+  WHERE e.sal = (SELECT MAX(e.sal)
+                   FROM emp e
+                  GROUP BY e.job );
+ -- ORA-01427: single-row subquery returns more than one row
+ 
  -- > IN 연산자를 사용하여 해결
  SELECT e.empno,
         e.ename,
@@ -285,9 +295,31 @@
                            GROUP BY e.job ));
  
  -- 4. 각 월별 입사인원을 세로로 출력
- -- 1)
- SELECT TO_CHAR(e.HIREDATE, 'YY-MM') as "입사 년 월"
+ -- a) 입사일 데이터로 월을 추출
+ SELECT TO_CHAR(e.hiredate, 'FMMM')
    FROM emp e;
+ -- b) 입사 월별 인원 => 그룹화 기준 월
+ --    인원을 구하는 함수는 COUNT(*)
+ SELECT TO_CHAR(e.hiredate, 'FMMM'),
+        COUNT(*)
+   FROM emp e
+  GROUP BY TO_CHAR(e.hiredate, 'FMMM');
+ -- c) 입사 월 순으로 정렬
+ SELECT TO_NUMBER(TO_CHAR(e.hiredate, 'FMMM')) || '월'  "입사월",
+        COUNT(*) "인원"
+   FROM emp e
+  GROUP BY TO_CHAR(e.hiredate, 'FMMM')
+  ORDER BY "입사월";
+ -- ==> '월'을 붙이면 다시 문자화 되어 정렬이 망가짐
+ 
+ -- 서브쿼리로 정렬시도
+ SELECT a."입사월"||'월' as "입사월",
+        a."인원"
+   FROM ( SELECT TO_NUMBER(TO_CHAR(e.hiredate, 'FMMM')) "입사월",
+           COUNT(*) "인원"
+            FROM emp e
+           GROUP BY TO_CHAR(e.hiredate, 'FMMM')
+           ORDER BY "입사월") a;
  
  
  
@@ -296,30 +328,8 @@
  
  
  
- -- 3)
- SELECT e1.empno,
-        e1.ename,
-        e1.mgr,
-        e2.empno,
-        e2.ename
-  FROM emp e1, emp e2
- WHERE e1.mgr = e2.empno(+); 
  
- -- 4)
- SELECT e1.empno,
-        e1.ename,
-        e1.mgr,
-        e2.ename
-   FROM emp e1,
-        emp e2
-  WHERE e1.mgr(+) = e2.empno;   
- 
- 
- 
- 
- 
- 
- 
+
  
  
  
