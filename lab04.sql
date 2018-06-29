@@ -57,4 +57,59 @@
                 d.loc
            FROM dept d) a
   WHERE e.deptno = a.deptno; 
+ -- 1)
+ CREATE TABLE CUSTOMER
+ (  userid      VARCHAR2(4)     PRIMARY KEY,
+    name        VARCHAR2(30)    NOT NULL,
+    birthyear   NUMBER(4),
+    regdate     DATE            DEFAULT sysdate,
+    address     VARCHAR2(30)
+ );
+ -- 2)
+ DESC CUSTOMER;
+ /*
+ USERID    NOT NULL VARCHAR2(4)  
+NAME      NOT NULL VARCHAR2(30) 
+BIRTHYEAR          NUMBER(4)    
+REGDATE            DATE         
+ADDRESS            VARCHAR2(30) 
+ */
+ -- 3)
+ CREATE TABLE NEW_CUST
+ AS
+ SELECT *
+   FROM customer
+  WHERE 1 =2;
+ -- 4)
+ DESC new_cust;
+ /*
+ USERID             VARCHAR2(4)  
+NAME      NOT NULL VARCHAR2(30) 
+BIRTHYEAR          NUMBER(4)    
+REGDATE            DATE         
+ADDRESS            VARCHAR2(30) 
+ */
+ -- 5) 
+ CREATE TABLE salesman
+ AS
+ SELECT e.job
+   FROM emp e
+  WHERE e.job = 'SALESMAN';
+ -- 6)
+ DESC salesman;
+ -- JOB    VARCHAR2(9) 
  
+ -- 7)
+ ALTER TABLE customer ADD
+ (  phone       VARCHAR2(11),
+    grade       VARCHAR2(30) CHECK( grade IN ('VIP','GOLD','SILVER'))
+ );
+ -- 8)
+ ALTER TABLE customer DROP COLUMN grade;
+ 
+ ALTER TABLE customer ADD 
+ (grade       VARCHAR2(30)  CHECK( grade IN ('VIP','GOLD','SILVER'))
+ );
+ -- 9)
+ ALTER TABLE customer MODIFY phone NUMBER(4);
+ ALTER TABLE customer MODIFY phone VARCHAR2(30);
