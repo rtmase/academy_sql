@@ -1,12 +1,20 @@
 --1. employees 테이블에서 job_id 를 중복 배제하여 조회 하고
 --   job_title 같이 출력
 --19건
-
+ SELECT DISTINCT e.JOB_ID,
+                 j.job_title
+   FROM employees e JOIN jobs j ON (e.job_id = j.job_id);
 
 --2. employees 테이블에서 사번, 라스트네임, 급여, 커미션 팩터,
 --   급여x커미션팩터(null 처리) 조회
 --   커미션 컬럼에 대해 null 값이면 0으로 처리하도록 함
 --107건
+ SELECT e.EMPLOYEE_ID,
+        e.LAST_NAME,
+        e.SALARY,
+        e.COMMISSION_PCT,
+        nvl(e.salary * e.commission_pct,0)
+   FROM employees e;
  
 --3. employees 테이블에서 사번, 라스트네임, 급여, 커미션 팩터(null 값 처리) 조회
 --   단, 2007년 이 후 입사자에 대하여 조회, 고용년도 순 오름차순 정렬
