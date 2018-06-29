@@ -19,14 +19,23 @@
 --3. employees 테이블에서 사번, 라스트네임, 급여, 커미션 팩터(null 값 처리) 조회
 --   단, 2007년 이 후 입사자에 대하여 조회, 고용년도 순 오름차순 정렬
 --30건
-
+ SELECT e.employee_id,
+        e.last_name,
+        e.salary,
+        nvl(e.commission_pct,0)
+   FROM employees e
+  WHERE TO_CHAR(e.hire_date,'YY') >= '07'
+  ORDER BY e.hire_date DESC;
 --4. Finance 부서에 소속된 직원의 목록 조회
 --조인으로 해결
-
-
+ SELECT e.employee_id,
+        e.last_name,
+        e.department_id
+   FROM employees e JOIN departments d ON (e.department_id = d.department_id)
+  WHERE e.department_id = 100; 
 
 --서브쿼리로 해결
-
+ 
 
 --6건
  
