@@ -260,28 +260,168 @@ ROWNUM, EMPNO, ENAME
  기본이므로 항상 주의!!!
  */
  
+ -- UPDATE 구문에 SELECT 서브 쿼리 사용
+ -- 'M08' 아이디의 phone, gender 수정
+ -- 권장되는 PK로  걸어서 수정하는 구문
+ UPDATE member m
+    SET m.phone = '3318',
+    SET m.gender= 'M'
+  WHERE m.MEMBER_ID = 'M08';  
  
+ -- 서브 쿼리 적용
+ UPDATE member m
+    SET m.phone = '3318',
+        m.gender= 'M'
+  WHERE m.address = (SELECT m.address
+                       FROM member m
+                      WHERE m.member_id = 'M08' );  
  
+ -- 'M13' 유재성 멤버의 성별 업데이트
+ UPDATE member m
+    SET m.gender = (SELECT SUBSTR('MATH',1,1)
+                      FROM dual)
+  WHERE m.member_Id = 'M13';  
  
+ SELECT SUBSTR('MATH',1,1)
+   FROM dual;
  
+ -- 'M12' 데이터 gender 컬럼 수정시 제약 조건 위반
+ UPDATE member m
+    SET m.gender = 'N'
+  WHERE m.member_id = 'M12';
+ -- ORA-02290: check constraint (SCOTT.CK_MEMBER_GENDER) violated
  
+ -- address 가 null 인 사람들의 주소를 일괄 '대전' 으로 수정
+ UPDATE member m
+    SET m.address = '대전'
+  WHERE m.address IS NULL;  
+  
+  commit;
+  
+  ---------------------------------------------------------
+  -- 3) DELETE : 테이블에서 행단위로 데이터 삭제
+  -- 1. WHERE 조건이 있는 DELETE 구문
+  -- 삭제 전 커밋
+  commit;
+  rollback;
+  -- gender 가 'F'인 데이터를 삭제
+  DELETE member m
+   WHERE m.gender = 'R';
+ -- 0개 행 이(가) 삭제되었습니다.
+ -- 이 결과는 gender에 R 값이 없으므로 삭제된 행이 없는 결과는 얻은 것뿐
+ -- 구문오류는 아님, 논리적으로 잘못된 결과인 것.
+  DELETE member m
+   WHERE m.gender = 'F';
+ -- 2개 행 이(가) 삭제되었습니다.
+ -- WHERE 조건절을 만족하는 모든 행에 대해 삭제 작업 진행
+ rollback;
+ -- M99 1행을 삭제하고 싶다면 PK로 삭제하자
+ DELETE member m
+  WHERE m.member_id = 'M99';
+ commit;
  
+ -- 2. WHERE 조건이 없는 DELETE 구문
+ -- WHERE 조건을 아예 누락(생략)한 경우 전체 행 삭제
+ DELETE member;
+ -- 13개 이(가) 삭제되었습니다.
+ rollback;
  
+ -- 3. DELETE 의 WHERE 에 서브쿼리 조합
+ -- 주소가 대전인 사람을 모두 삭제
+ -- (1) 주소가 대전인 사람을 조회
+ SELECT m.member_id
+   FROM member m
+  WHERE m.address = '대전'; 
+ -- (2) 삭제하는 메인 쿼리 작성
+ DELETE member m
+  WHERE m.member_id IN(SELECT m.member_id
+                         FROM member m
+                        WHERE m.address = '대전' );
+ -- 4개 행 이(가) 삭제되었습니다.
+ rollback;
+ -- 위와 동일한 작업을 일반 WHERE 로 삭제
+ DELETE member m
+  WHERE m.address = '대전';
+ rollback;
  
+ ----------------------------------------------------------------------------
+ -- DELETE VS, TRUNCATE
+ /*
+    1. TRUNCATE 는 DDL 에 속하는 명령어
+       ROLLBACK 지점을 생성하지 않음
+       따라서 한 번 실행된 DDL을 되돌릴 수 없음.
+       
+    2. TRUNCATE 는 WHERE 절 조합이 안되므로
+       특정 데이터 선별하여 삭제하는 것이 불가능
+       
+       사용시 주의
+ */
+ -- new_member 테이블을 TRUNCATE 로 날려보자
+ -- 실행 전 되돌아갈 커밋 지점 생성
+ commit;
+ -- new_member 내용 확인
+ SELECT nw.*
+   FROM new_member nw;
+ -- TRUNCATE 로 new_member 테이블 잘라내기
+ TRUNCATE TABLE new_member;
+ -- Table NEW_MEMBER이(가) 잘렸습니다.
  
+ -- 되돌리기 시도
+ rollback;
+ -- DDL, 종류의 구문은 생성즉시 바로 커밋이 이루어짐.
+ -- 롤백의 시점이 이미 DDL 실행 다음 시점으로 잡힙.
  
+ ---------------------------------------------------------
+ -- TCL : Transection Control Language
+ -- 1) COMMIT
+ -- 2) ROLLBACK
+ -- 3) SVAEPOINT
+ commit;
+ rollback;
+ -- 1. new_member 테이븡ㄹ에 1행 추가
+ INSERT INTO new_member(member_id,MEMBER_NAME)
+ VALUES ('M01','홍길동');
+ -- 1행 추가 상태까지 중간 저장
+ SAVEPOINT do_insert;
  
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+ -- 2. '홍길동' 데이터의 주소를 수정
+ UPDATE new_member m
+    SET m.address = '율도국'
+  WHERE m.member_id = 'M01';
+ -- 수정 상태까지 중간 저장
+ SAVEPOINT do_update_addr;
+ -- 3. '홍길동' 데이터의 전화번호를 수정
+ UPDATE new_member m
+    SET m.phone = '0001'
+  WHERE m.member_id = 'M01';
+ -- 전화번호 수정 상태까지 중간 저장
+ SAVEPOINT do_update_phone;
+ -- 3. '홍길동' 데이터의 성별를 수정
+ UPDATE new_member m
+    SET m.gender = 'K'
+  WHERE m.member_id = 'M01';
+ -- 성별 수정 상태까지 중간 저장
+ SAVEPOINT do_update_gender;
+ -----------------------------------------------------
+ -- 홍길동 데이터의 ROLLBACK 시나리오
+ -- 1. 주소 수정까지는 맞는데, 전화번호, 성별 수정은 잘못됨
+ -- : 되돌아가야 할 SAVEPOINT = do_upate_addr
+ ROLLBACK TO do_update_addr;
+ -- 2. 주소, 전화번호까지 수정이 맞고, 성별 수정이 잘못됨
+ ROLLBACK TO do_update_phone;
+ /*
+   ORA-01086: savepoint 'DO_UPDATE_PHONE' never established in this session or is invalid
+   SAVEPOINT 의 순서가 do_update_addr 이 아퍼기 때문에 여기까지 한번 rollback이 일어나면 그 후에 생성된
+   SAVEPOINT 는 삭제 됨
+   
+   앞의 수정구문 제 실행 후 다시 전화번호 수정까지 돌아감
+ */
+ ROLLBACK TO do_update_phone;
+ -- 3. 2번 수행 후 어디까지 롤백이 가능한가
+ ROLLBACK TO do_update_addr;
+ ROLLBACK TO do_insert;
+ ROLLBACK;
+ -- SAVEPOINT 로 한번 되돌아 가면 되돌아간 시점 이후 생성된 SAVEPOINT 는 무효화 됨
  
  
  
