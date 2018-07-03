@@ -35,29 +35,71 @@
   WHERE e.department_id = 100; 
 
 --서브쿼리로 해결
- 
-
+ SELECT d.DEPARTMENT_ID
+   FROM departments d
+  WHERE d.department_id = 100; 
+  
+ SELECT e.EMPLOYEE_ID,
+        e.LAST_NAME,
+        e.DEPARTMENT_ID
+   FROM employees e
+  WHERE e.department_id = (SELECT d.DEPARTMENT_ID
+                             FROM departments d
+                            WHERE d.department_id = 100); 
 --6건
  
 --5. Steven King 의 직속 부하직원의 모든 정보를 조회
 --14건
 -- 조인 이용
-
+ SELECT e2.employee_id,
+        e2.last_name,
+        e2.department_id
+   FROM employees e1 JOIN employees e2 ON (e1.employee_id = e2.MANAGER_ID)
+  WHERE e2.manager_id = 100; 
 
 -- 서브쿼리 이용
- 
+ SELECT DISTINCT e.MANAGER_ID
+   FROM employees e
+  WHERE e.manager_id = 100; 
+ SELECT e.*
+   FROM employees e
+  WHERE e.manager_id = (SELECT DISTINCT e.MANAGER_ID
+                      FROM employees e
+                     WHERE e.manager_id = 100); 
 --6. Steven King의 직속 부하직원 중에서 Commission_pct 값이 null이 아닌 직원 목록
+ SELECT e2.employee_id,
+        e2.last_name,
+        e2.department_id
+   FROM employees e1 JOIN employees e2 ON (e1.employee_id = e2.MANAGER_ID)
+  WHERE e2.manager_id = 100
+    AND e2.COMMISSION_PCT IS NOT NULL; 
 --5건
 
 --7. 각 job 별 최대급여를 구하여 출력 job_id, job_title, job별 최대급여 조회
 --19건
-
+ SELECT e.job_id,
+        MAX(e.SALARY),
+        j.JOB_TITLE,
+        j.MAX_SALARY
+   FROM employees e JOIN jobs j ON (e.job_id = j.job_id) 
+   GROUP BY e.job_id, 
+            j.JOB_TITLE, 
+            j.MAX_SALARY;
 
  
 --8. 각 Job 별 최대급여를 받는 사람의 정보를 출력,
 --  급여가 높은 순서로 출력
 ----서브쿼리 이용
- 
+ SELECT e.JOB_ID,
+        MAX(e.SALARY)
+   FROM employees e
+  GROUP BY e.JOB_id;
+ SELECT a.max_sal,
+        e.EMPLOYEE_ID
+   FROM employees e,(SELECT e.JOB_ID,
+                           MAX(e.SALARY) as max_sal
+                           FROM employees e
+                           GROUP BY e.JOB_id) a;
 ----join 이용
 
 
