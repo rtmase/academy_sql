@@ -423,6 +423,159 @@ PL/SQL 프로시저가 성공적으로 완료되었습니다.
  
  
  
+ -------------------------------------------------------------------------------
+ -- PL/SQL 제어문
+ -------------------------------------------------------------------------------
+ -- 1. IF 제어문
+ -- IF ~ THEN ~ [ELSIF ~ THEN] ~ ELSE ~ END IF;
  
+ -- job 별로 경조사비를 급여대비 일정 비율로 지급하고 있다.
+ -- 각 직원들의 경조사비 지원금을 구하는 프로시저 작성
+ /*
+    CLERK       :5%
+    SALESMAN    :4%
+    MANAGE      :3.7%
+    ANALYST     :3%
+    PRESIDENT   :1.5%
+ */
+ -- (1) SP 이름 : sp_get_tribute_fee
+ -- (2) IN 변수 : v_empno (사번)
+ -- (3) OUT 변수 : v_tribute_fee (급여타입)
+ -- 1. 프로시저 작성
+ CREATE OR REPLACE PROCEDURE sp_get_tribute_fee
+ ( v_empno          IN emp.empno%TYPE,
+   v_tribute_fee    OUT emp.sal%TYPE)
+ IS
+  -- 1. 사번인 직원의 직무를 저장할 지역변수 선언
+  v_job    emp.job%TYPE;
+  -- 2. 사번인 직원의 급여를 저장할 지역변수 선언
+  v_sal    emp.sal%TYPE;
+ BEGIN
+  -- 3. 입력된 사번 직원의 직무,급여를 조회하여 v_job, v_sal 에 저장
+
+  SELECT e.job,
+         e.sal
+    INTO v_job,
+         v_sal
+    FROM emp e
+   WHERE e.empno = v_empno; 
+  -- 4. 일정 비율로 v_tribute_fee 계산  
+  IF v_job = 'CLERK' THEN v_tribute_fee := v_sal * 0.05;
+  ELSIF v_job = 'SALESMAN' THEN v_tribute_fee := v_sal * 0.04;
+  ELSIF v_job = 'MANAGER' THEN v_tribute_fee := v_sal * 0.03;
+  ELSIF v_job = 'ANALYST' THEN v_tribute_Fee := v_sal * 0.037;
+  ELSIF v_job = 'PRESIDENT' THEN v_tribute_Fee := v_sal * 0.015;
+  END IF;
+ END sp_get_tribute_fee;
+ /
+ -- 2. 컴파일 / 디버깅 
+ -- Procedure SP_GET_TRIBUTE_FEE이(가) 컴파일되었습니다.
+ -- 3. VAR v_tribute_fee_bind
+ VAR v_tribute_fee_bind NUMBER;
  
+ EXEC sp_get_tribute_fee(v_tribute_fee => :v_tribute_fee_bind, v_empno => 7566)
  
+ PRINT v_tribute_fee_bind;
+ /*
+V_TRIBUTE_FEE_BIND
+------------------
+             89.25 
+ */
+ 
+ -- 2. LOOP 기본 반복문
+ -- ANONYMOUS PROCEDURE 로 실행 예
+ -- 문제) 1~ 10 까지의 합을 출력
+ DECLARE
+  -- 1.
+  v_init NUMBER := 0;
+  -- 2. 합산을 저장할 변수 선언 / 초기화
+  v_sum  NUMBER := 0;
+ BEGIN
+  LOOP
+    v_init := v_init + 1;
+    v_sum := v_sum + v_init;
+    DBMS_OUTPUT.put_line('v_sum :' || v_sum);
+    -- 반복문 종료 조건
+    EXIT WHEN v_init = 10;
+  END LOOP;
+  -- 합산 변수 출력
+  DBMS_OUTPUT.put_line('1~ 10 합산 결과 :' || v_sum);
+ END;
+ /
+ -- 2. LOOP : FOR LOOP 카운터 변수를 사용하는 반복문
+ -- 지정된 횟수만큼 실행 반복문
+ -- 문제) 1~ 20 사이의 3의 배수를 출력 : ANONYMOUS PROCEDURE
+ DECLARE
+    -- 1. FOR LOOP 에서 사용할 카운터 변수 선언 / 초기화
+    cnt     NUMBER := 0;
+ BEGIN
+    -- 2. LOOP 작성
+    FOR cnt IN 1 .. 20 LOOP
+        -- 3. 3의 배수 판단
+        IF(MOD(cnt,3)=0) 
+        THEN DBMS_OUTPUT.PUT_LINE(cnt);
+        END IF;
+    END LOOP;
+ END;
+ /
+ -- 2. LOOP : WHILE LOOP 조건에 따라 수행되는 반복문
+ -- 문제) 1~ 20 사이의 수 중에서 2의 배수를 화면 출력 : ANONYMOUS PROCEDURE
+ DECLARE
+    -- 반복 조건으로 사용할 횟수 변수 선언
+    cnt     NUMBER := 0;
+ BEGIN
+    -- WHILE 반복문 작성
+    WHILE cnt < 20 LOOP
+        cnt := cnt + 2;
+        DBMS_OUTPUT.put_line(cnt);
+        
+    END LOOP;
+ END;
+ /
+ ----------------------------------------------------------------------
+ -- PL/SQL : Stored Function (저장 함수)
+ ----------------------------------------------------------------------
+ -- 대부분 SP랑 유사
+ -- IS 블록 전에 RETURN 구문이 존재
+ -- RETURN 구문에는 문장 종료 기호 (;) 없음
+ -- 실행은 기존 사용하는 함수와 동일하게 SELECT, WHERE 절에 사용함.
+ -- 문제) 부서번호를 입력받아서 해당 부서의 급여 평균을 구하는 함수 작성
+ -- (1) FN 이름 : fn_avg_sal_by_dept
+ -- (2) IN 변수 : v_deptno 부서번호타입
+ -- (3) 지역변수 : v_avg_sal 급여타입   계산된 평균 급여를 저장
+ -- 1. 함수작성
+ CREATE OR REPLACE FUNCTION fn_avg_sal_by_dept
+    ( v_deptno     IN  emp.DEPTNO%TYPE)
+ RETURN NUMBER   
+ IS
+    -- 부서별 급여 평균을 저장할 지역변수 선언
+    v_avg_sal     emp.sal%TYPE;
+ BEGIN
+    -- 부서 별 급여 평균을 AVG() 함수를 사용하여 구하고 저장
+    SELECT AVG(e.sal)
+      INTO v_avg_sal
+      FROM emp e
+     WHERE e.deptno = v_deptno;
+     
+    -- 계산 결과를 반올림하여 리턴
+    RETURN ROUND(v_avg_sal);
+ END fn_avg_sal_by_dept;
+ /
+ -- 2. 컴파일/ 디버깅
+ -- Function FN_AVG_SAL_BY_DEPT이(가) 컴파일되었습니다.
+ -- 3. 이 함수를 사용하는 쿼리를 작성하여 실행해 본다.
+ -- 10번 부서의 급여 평균을 알고 싶다.
+ SELECT fn_avg_sal_by_dept(10) as 부서급여평균
+   FROM dual;
+ SELECT AVG(sal)
+   FROM emp 
+  WHERE deptno = 10; 
+  
+ -- 30번 부서의 급여 평균보다 높은 급여 평균을 받는 부서는?
+ SELECT e.DEPTNO,
+        AVG(e.sal)
+   FROM emp e
+  GROUP BY e.deptno
+  HAVING AVG(e.sal) > fn_avg_sal_by_dept(30);
+  
+   
