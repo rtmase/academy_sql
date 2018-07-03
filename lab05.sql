@@ -171,13 +171,32 @@ PL/SQL 프로시저가 성공적으로 완료되었습니다.
  
  EXEC log_execution;
  -- 4)
+ SELECT TO_CHAR(l.log_date, 'YYYY-MM-DD HH24-MI-SS')
+   FROM log_table l
+  WHERE l.log_date = (SELECT MAX(log_table.log_date) FROM log_table);
+ 
  CREATE OR REPLACE PROCEDURE log_execution
- ( v_log_user   IN      VARCHAR2(20),
-   v_log_date   OUT     DATE)
+ ( v_log_user   IN      VARCHAR2,
+   v_log_date   OUT     VARCHAR2)
  IS
-  v_userid VARCHAR2(20) := 'myid';
  BEGIN
-  INSERT INTO log_table VALUES (v_userid,sysdate);
+  SELECT TO_CHAR(l.log_date, 'YYYY-MM-DD HH24-MI-SS')
+    INTO v_log_date
+    FROM log_table l
+   WHERE l.log_date = (SELECT MAX(log_table.log_date) FROM log_table);
+ 
  END log_execution;
  /
+ VAR v_log_date_bind VARCHAR2(20);
+ 
+ EXEC log_execution('myid',:v_log_date_bind);
+ 
+ PRINT v_log_date_bind;
+ /*
+V_LOG_DATE_BIND
+--------------------------------------------------------------------------------
+2018-07-03 13-50-39 
+ */
+
+
  
