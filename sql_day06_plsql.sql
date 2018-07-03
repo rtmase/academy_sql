@@ -336,3 +336,93 @@ PL/SQL 프로시저가 성공적으로 완료되었습니다.
 
 PL/SQL 프로시저가 성공적으로 완료되었습니다. 
  */
+ ----------------------------------------------------
+ -- PL/SQL 변수 : 아규먼트 변수 IN OUT 모드의 사용
+ ----------------------------------------------------
+ -- IN : SP로 값이 전달될 때 사용, 입력용
+ --      프로시저를 사용하는 쪽(SQL*PLUS)에서 프로시저로 전달
+ ----------------------------------------------------
+ -- OUT : SP에서 수행 결과 값이 저장되는 용도, 
+ --       출력용 프로시저는 리턴(반환)이 없기 떄문에 SP를 호출한 쪽에 돌려주는 방벙으로 사용
+ ----------------------------------------------------
+ -- IN OUT : 하나의 매개 변수에 입력, 출력을 함께 사용
+ ----------------------------------------------------
+ -- 문제) 기본 숫자값을 입력 받아서 숫자 포맷화 '$9,999.00'
+ --      출력하는 프로시저를 작성 IN OUT 모드 변수를 활용
+ -- (1) SP 이름 : sp_chng_number_format
+ -- (2) IN OUT 변수 : v_number;
+ -- (3) BIND 변수 : v_number_bind;
+ -- 1. 프로시저 작성
+ CREATE OR REPLACE PROCEDURE sp_chng_number_format
+ ( v_number IN OUT VARCHAR2 )
+ IS
+ BEGIN
+ -- 1. 입력된 초기 상태의 값 출력
+ DBMS_OUTPUT.PUT_LINE('초기 입력 값' || v_number);
+ 
+ -- 2. 숫자 패턴화 변경
+ v_number := TO_CHAR(TO_NUMBER(v_number),'$9,999.99');
+ 
+ -- 3. 화면 출력으로 변경된 패턴 확인
+ DBMS_OUTPUT.PUT_LINE('패턴 적용 값' || v_number);
+ 
+ END sp_chng_number_format;
+ /
+ -- 2. 컴파일 / 디버깅
+ -- Procedure SP_CHNG_NUMBER_FORMAT이(가) 컴파일되었습니다.
+ -- 3. VAR : BIND 변수 선언
+ -- IN OUT 으로 사용될 변수
+ VAR v_number_bind  VARCHAR2(20);
+ -- 4. EXEC : 실행
+ -- 4.1 BIND 변수에 1000을 먼저 저장
+ EXEC :v_number_bind := 1000;
+ -- 4.2 1000이 저장된 BIND 변수를 프로시저에 전달
+ EXEC sp_chng_number_format(:v_number_bind);
+ /*
+ 초기 입력 값1000
+패턴 적용 값 $1,000.00
+ */
+ -- 5. PRINT : BIND 변수 출력
+ PRINT v_number_bind;
+ /*
+ V_NUMBER_BIND
+--------------------------------------------------------------------------------
+ $1,000.00
+ */
+  
+ -- 실습 8번 할때 sp : sp_chng_date_format // IN OUT v_date로 해서 작성
+ 
+ -------------------------------------------------------------------------------
+ -- 위의 문제를 다른 방법으로 풀이 : SELECT ~ INTO 절을 사용
+ CREATE OR REPLACE PROCEDURE sp_chng_number_format
+ ( in_number IN NUMBER,
+   out_number OUT VARCHAR2)
+ IS
+ BEGIN 
+ -- in_number 로 입력된 값을 INTO 절을 사용하여 out_number 변수로 입력
+  SELECT TO_CHAR(in_number,'$9,999.99')
+    INTO out_number
+    FROM dual;
+ END sp_chng_number_format;
+ /
+ 
+ VAR v_out_number_bind VARCHAR2(20);
+ 
+ EXEC sp_chng_number_format(1000,:v_out_number_bind);
+ 
+ PRINT v_out_number_bind;
+ 
+ -------------------------------------------------------------------------------
+ -- 매개 변수 전달법 : SP 에서는 위치, 변수명에 의한 전달 방식이 있다.
+ -------------------------------------------------------------------------------
+ -- 1. 위치에 의한 전달 법
+ EXEC sp_chng_number_format(1000,:v_out_number_bind);
+ -- 2. 변수명에 의한 전달
+ EXEC sp_chng_number_format(in_number =>1000, out_number =>:v_out_number_bind);
+ EXEC sp_chng_number_format(out_number =>:v_out_number_bind, in_number =>1000);                           
+ 
+ 
+ 
+ 
+ 
+ 
