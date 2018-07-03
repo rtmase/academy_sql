@@ -277,8 +277,8 @@ PL/SQL 프로시저가 성공적으로 완료되었습니다.
          emp e1,
          dept d, 
          salgrade s
-   WHERE e.mgr = e1.empno 
-     AND e.deptno = d.deptno
+   WHERE e.mgr = e1.empno(+) -- mgr 배정 안된 직원
+     AND e.deptno = d.deptno(+) -- dept 배정 안된 직원
      AND e.sal BETWEEN s.losal AND s.hisal
      AND e.empno = v_empno;     
      -- 4. v_emp_record 에 들어온 값들 화면 출력
@@ -309,7 +309,7 @@ PL/SQL 프로시저가 성공적으로 완료되었습니다.
  EXEC sp_get_emp_info_detail(7839);
  -- mgr 이 없어서 에러
  EXEC sp_get_emp_info_detail(7902);
- 
+ EXEC sp_get_emp_info_detail(6666);
  ----------------------------------------------------------------
  -- 포로시저는 다른 프로시저에서 호출 가능
  -- ANONYMOUS PROCEDURE 를 사용하여 지금 정의한 
@@ -577,5 +577,90 @@ V_TRIBUTE_FEE_BIND
    FROM emp e
   GROUP BY e.deptno
   HAVING AVG(e.sal) > fn_avg_sal_by_dept(30);
+ 
+ 
+ -- SP/ FN 에서 예외처리
+ -- 예외처리 : 오라클에서 프로시저 실행 중 발생할 수 있는 
+ --           이미 잘 알려진 상황에 대한 사전 정의 예외목록을 제공
+ 
+ 
+ CREATE OR REPLACE PROCEDURE sp_get_emp_info_detail
+ ( v_empno      IN  emp.empno%TYPE)
+ IS
+  -- 1. RECODE 타입 선언
+  TYPE emp_record_type IS RECORD 
+  ( r_empno     emp.empno%TYPE,
+    r_ename     emp.ename%TYPE,
+    r_mgrname   emp.ename%TYPE,
+    r_dname     dept.dname%TYPE,
+    r_loc       dept.loc%TYPE,
+    r_salgrade  SALGRADE.GRADE%TYPE);
+  -- 2. 1에서 선언한 타입의 변수를 선언
+    v_emp_record  emp_record_type;
+ BEGIN
+  -- 3. 1에서 선언한 record 타입은 조인의 결과를 받을 수 있음
+  SELECT e.empno,
+         e.ename,
+         e1.ename,
+         d.DNAME,
+         d.LOC,
+         s.GRADE
+    INTO v_emp_record
+    FROM emp e, 
+         emp e1,
+         dept d, 
+         salgrade s
+   WHERE e.mgr = e1.empno 
+     AND e.deptno = d.deptno
+     AND e.sal BETWEEN s.losal AND s.hisal
+     AND e.empno = v_empno;     
+     -- 4. v_emp_record 에 들어온 값들 화면 출력
+     DBMS_OUTPUT.put_line('사 번 : ' || v_emp_record.r_empno);
+     DBMS_OUTPUT.put_line('이 름 : ' || v_emp_record.r_ename);
+     DBMS_OUTPUT.put_line('매니저 : ' || v_emp_record.r_mgrname);
+     DBMS_OUTPUT.put_line('부서명 : ' || v_emp_record.r_dname);
+     DBMS_OUTPUT.put_line('부서 위치 : ' || v_emp_record.r_loc);
+     DBMS_OUTPUT.put_line('급여 등급 : ' || v_emp_record.r_salgrade);
+     -- 5. NO_DATA_FOUND 예외처리
+     EXCEPTION 
+          WHEN NO_DATA_FOUND     
+          THEN DBMS_OUTPUT.PUT_LINE('해당 직원의 매니저 혹은 부서가 배정되지 않았습니다.');
+          
+ END sp_get_emp_info_detail;
+ /
+  EXEC sp_get_emp_info_detail(7839);
+  EXEC sp_get_emp_info_detail(6666); 
+  -- 해당 직원의 매니저 혹은 부서가 배정되지 않았습니다.
   
-   
+  -- 2. DUP_VAL_ON_INDEX
+  -- 문제) member 테이블에 member_id, member_name 을 입력받아서 신규로
+  -- 1행을 추가하는 sp_insert_member 작성
+  -- 1. 프로시저 작성
+  CREATE OR REPLACE PROCEDURE sp_insert_member
+  ( v_member_id     IN MEMBER.MEMBER_ID%TYPE,
+    v_member_name   IN member.member_name%TYPE)
+  IS
+  BEGIN
+    -- 입력된 IN 모드 변수 값을 INSERT 시도
+    INSERT INTO member( member_id, member_name)
+    VALUES (v_member_id, v_member_name);
+    COMMIT;
+    DBMS_OUTPUT.put_line(v_member_id||' 신규 추가 진행' );
+    -- 입력시도에는 항상 DUP_VAL_ON_INDEX 예외 위험 존재
+    EXCEPTION
+        WHEN DUP_VAL_ON_INDEX
+        THEN -- 이미 존재하는 키의 값이면 신규 추가가 아니라 수정으로 진행
+             UPDATE member m
+                SET m.member_name = v_member_name
+              WHERE m.member_id = v_member_id;  
+             -- 처리 내용을 화면 출력
+             DBMS_OUTPUT.put_line(v_member_id||'가 이미 존재 하므로 멤버 정보 수정 진행' );
+             /*
+             when no_data_found
+             then .....
+             */
+  END sp_insert_member;
+  /
+  
+  EXEC sp_insert_member('M13','유재성');
+  EXEC sp_insert_member('M14','채한나');
