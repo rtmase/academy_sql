@@ -157,3 +157,27 @@ Hello PL/SQL World!
 PL/SQL 프로시저가 성공적으로 완료되었습니다. 
  */
  -- 3)
+ CREATE TABLE log_table
+ ( userid VARCHAR2(20),
+   log_date DATE
+ );
+ CREATE OR REPLACE PROCEDURE log_execution
+ IS
+  v_userid VARCHAR2(20) := 'myid';
+ BEGIN
+  INSERT INTO log_table VALUES (v_userid,sysdate);
+ END log_execution;
+ /
+ 
+ EXEC log_execution;
+ -- 4)
+ CREATE OR REPLACE PROCEDURE log_execution
+ ( v_log_user   IN      VARCHAR2(20),
+   v_log_date   OUT     DATE)
+ IS
+  v_userid VARCHAR2(20) := 'myid';
+ BEGIN
+  INSERT INTO log_table VALUES (v_userid,sysdate);
+ END log_execution;
+ /
+ 
