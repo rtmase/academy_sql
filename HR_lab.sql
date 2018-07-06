@@ -109,31 +109,73 @@
 --20건
 
 
---10. 전체 직원의 급여 평균을 구하여 출력
 
+--10. 전체 직원의 급여 평균을 구하여 출력
+ SELECT AVG(e.SALARY)
+   FROM employees e;
 
 --11. 전체 직원의 급여 평균보다 높은 급여를 받는 사람의 목록 출력. 급여 오름차순 정렬
 --51건
-
+ SELECT e.EMPLOYEE_ID,
+        e.FIRST_NAME,
+        e.LAST_NAME,
+        e.SALARY
+   FROM employees e
+  WHERE (SELECT AVG(e.SALARY)
+           FROM employees e) < e.salary
+  ORDER BY e.salary ASC;
 --12. 각 부서별 평균 급여를 구하여 출력
 --12건
+ SELECT e.DEPARTMENT_ID,
+        AVG(e.salary)
+   FROM employees e
+  GROUP BY e.DEPARTMENT_ID ;
 
 --13. 12번의 결과에 department_name 같이 출력
 --12건
-
+  SELECT e.DEPARTMENT_ID,
+         d.DEPARTMENT_NAME,
+        AVG(e.salary)
+   FROM employees e JOIN DEPARTMENTS d ON (e.DEPARTMENT_ID = d.department_id)
+  GROUP BY e.DEPARTMENT_ID,
+           d.DEPARTMENT_NAME ;
 
 --14. employees 테이블이 각 job_id 별 인원수와 job_title을 같이 출력하고 job_id 오름차순 정렬
-
+ SELECT e.job_id,
+        j.job_title,
+        COUNT(e.job_id)
+   FROM EMPLOYEES e JOIN JOBS j ON (e.job_id = j.job_id)
+  GROUP BY e.job_id,
+           j.job_title; 
 
 --15. employees 테이블의 job_id별 최저급여,
 --   최대급여를 job_title과 함께 출력 job_id 알파벳순 오름차순 정렬
-
+ SELECT e.job_id,
+        MIN(e.salary),
+        MAX(e.salary),
+        j.job_title
+   FROM employees e JOIN JOBS j ON (e.job_id = j.job_id)
+  GROUP BY e.job_id,
+           j.JOB_TITLE
+  ORDER BY e.job_id;
 
  
 --16. Employees 테이블에서 인원수가 가장 많은 job_id를 구하고
 --   해당 job_id 의 job_title 과 그 때 직원의 인원수를 같이 출력
-
-
+ SELECT COUNT(e.job_id),
+        e.job_id
+   FROM EMPLOYEES e 
+  GROUP BY e.job_id;
+ 
+ 
+  
+ SELECT e.job_id,
+        MAX(cnt)
+   FROM employees e,
+        (SELECT MAX(COUNT(e.job_id)) as cnt 
+         FROM EMPLOYEES e 
+        GROUP BY e.job_id);
+             
 
 
 --17.사번,last_name, 급여, 직책이름(job_title), 부서명(department_name), 부서매니저이름
